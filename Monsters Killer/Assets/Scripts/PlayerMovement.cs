@@ -5,7 +5,6 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] Joystick joystick;
     [SerializeField] Transform head;
 
     float xRotation;
@@ -15,14 +14,15 @@ public class PlayerMovement : MonoBehaviour
     float speed = 2;
     Vector3 movement;
     Vector2 lookMovement;
-    [SerializeField] float senstivity = 0.5f;
+    float senstivity = 10f;
+
 
     public void OnMove(InputAction.CallbackContext value)
     {
-        SetMovement(value.ReadValue<Vector2>().y , value.ReadValue<Vector2>().x);
+        SetMovement(value.ReadValue<Vector2>().x , value.ReadValue<Vector2>().y);
     }
 
-    void SetMovement(float z, float x)
+    void SetMovement(float x, float z)
     {
         movement = new Vector3(x , 0 , z).normalized;
     }
@@ -42,31 +42,31 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnLook(InputAction.CallbackContext value)
     {
-        lookMovement = value.ReadValue<Vector2>() * senstivity;
+        Setlooking(value.ReadValue<Vector2>().x, value.ReadValue<Vector2>().y);
+    }
+
+    void Setlooking(float x, float y)
+    {
+        lookMovement = new Vector2(x, y) * senstivity * Time.deltaTime;
     }
 
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (value.performed /*&& isGrounded*/)
+        if (value.performed && isGrounded)
         {
             Jump();
         }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         speed = Application.platform == RuntimePlatform.Android ? 4 : 2;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (Application.platform == RuntimePlatform.Android)
-        {
-            SetMovement(joystick.Vertical , joystick.Horizontal);
-        }
+
     }
 
     private void FixedUpdate()
@@ -94,6 +94,11 @@ public class PlayerMovement : MonoBehaviour
     void Jump()
     {
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+    }
+
+    public void SetIsGroundedState(bool state)
+    {
+        isGrounded = state;
     }
 
 }
