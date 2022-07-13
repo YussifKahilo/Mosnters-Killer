@@ -7,6 +7,8 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] Transform head;
 
+    Animator anim;
+
     float xRotation;
     bool isGrounded = false;
     Rigidbody rb;
@@ -60,13 +62,9 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         speed = Application.platform == RuntimePlatform.Android ? 4 : 2;
-    }
-
-    void Update()
-    {
-
     }
 
     private void FixedUpdate()
@@ -81,6 +79,8 @@ public class PlayerMovement : MonoBehaviour
 
     void Move()
     {
+        anim.SetFloat("X", (movement.x * speed) / 4.0f);
+        anim.SetFloat("Y", (movement.z * speed) / 4.0f);
         transform.Translate(movement * speed * Time.deltaTime);
     }
 
