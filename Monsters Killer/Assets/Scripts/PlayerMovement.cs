@@ -5,9 +5,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] Transform head;
-
-    Animator anim;
+    [SerializeField] Transform headHolder;
+    //Animator anim;
 
     float xRotation;
     bool isGrounded = false;
@@ -16,7 +15,7 @@ public class PlayerMovement : MonoBehaviour
     float speed = 2;
     Vector3 movement;
     Vector2 lookMovement;
-    float senstivity = 10f;
+    public float senstivity = 10f;
 
 
     public void OnMove(InputAction.CallbackContext value)
@@ -62,7 +61,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-        anim = GetComponent<Animator>();
+       //anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         speed = Application.platform == RuntimePlatform.Android ? 4 : 2;
     }
@@ -72,6 +71,11 @@ public class PlayerMovement : MonoBehaviour
         Move();
     }
 
+    private void Update()
+    {
+        //headHolder.position = head.position + head.forward * offset.z + new Vector3(0,offset.y,0);
+    }
+
     private void LateUpdate()
     {
         Look();
@@ -79,15 +83,15 @@ public class PlayerMovement : MonoBehaviour
 
     void Move()
     {
-        anim.SetFloat("X", (movement.x * speed) / 4.0f);
-        anim.SetFloat("Y", (movement.z * speed) / 4.0f);
+        //anim.SetFloat("X", (movement.x * speed) / 4.0f);
+        //anim.SetFloat("Y", (movement.z * speed) / 4.0f);
         transform.Translate(movement * speed * Time.deltaTime);
     }
 
     void Look()
     {
-        xRotation = Mathf.Clamp(xRotation - lookMovement.y , -70 , 70);
-        head.localRotation = Quaternion.Euler(xRotation , 0 , 0);
+        xRotation = Mathf.Clamp(xRotation - lookMovement.y , -60 , 60);
+        headHolder.localRotation = Quaternion.Euler(xRotation , 0 , 0);
         transform.Rotate(transform.up , lookMovement.x );
     }
 
