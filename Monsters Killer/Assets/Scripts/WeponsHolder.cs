@@ -19,7 +19,7 @@ public class WeponsHolder : MonoBehaviour
     float changeTimeElapsed = 0;
     bool loweringWeight = false, higheringWeight = false;
 
-    [SerializeField] PlayerMovement playerMovement;
+    public PlayerMovement playerMovement;
     [SerializeField] Vector3 normalHandPosition;
     [SerializeField] Vector3 aimHandPosition;
 

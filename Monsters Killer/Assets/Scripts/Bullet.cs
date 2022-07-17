@@ -5,30 +5,15 @@ using UnityEngine;
 public class Bullet : MonoBehaviour
 {
     [SerializeField] int bulletSpeed;
-    [SerializeField] GameObject impactEffect;
-    public Vector3 shootPosition;
-    Rigidbody rb;
+    public Vector3 hitPosition;
 
-    // Start is called before the first frame update
-    void Start()
+    void Update()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.AddForce(transform.forward * bulletSpeed * Time.deltaTime, ForceMode.Impulse);
-        StartCoroutine(DestroyAfterTime());
+        transform.position = Vector3.MoveTowards(transform.position , hitPosition , bulletSpeed);
+        if (transform.position == hitPosition)
+        {
+            print("Here");
+            Destroy(gameObject);
+        }
     }
-
-
-
-    IEnumerator DestroyAfterTime()
-    {
-        yield return new WaitForSeconds(5f);
-        Destroy(gameObject);
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        Transform ie= Instantiate(impactEffect, transform.position, Quaternion.LookRotation(shootPosition - transform.position)).transform;
-        Destroy(gameObject);
-    }
-
 }

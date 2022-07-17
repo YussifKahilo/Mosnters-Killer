@@ -6,6 +6,7 @@ using UnityEngine.Animations.Rigging;
 
 public class Gun : MonoBehaviour
 {
+    [SerializeField] GameObject impactEffect;
     [SerializeField] TextMeshProUGUI weaponAmmoTextNormal , weaponAmmoTextAlert, weaponMagText;
     [SerializeField] Transform barel;
     [SerializeField] Transform cam;
@@ -18,6 +19,7 @@ public class Gun : MonoBehaviour
     [SerializeField] string reloadWeaponDir;
     [SerializeField] LayerMask layers;
     public float fireRate;
+    [SerializeField] float aimRecoil;
     [SerializeField] float recoil;
     [SerializeField] float damage;
     [SerializeField] int maxMag;
@@ -56,7 +58,7 @@ public class Gun : MonoBehaviour
     private void Start()
     {
         anim = GetComponent<Animator>();
-        cursorSize = 800 * recoil;
+        cursorSize = 4400 * recoil;
         targetCursorSize = cursorSize;
         currentCursorSize = cursorSize;
         targetRecoilSize = recoil;
@@ -76,7 +78,7 @@ public class Gun : MonoBehaviour
         
 
         canShoot = !isReloading;
-        cursorSize = recoilAmount * 800;
+        cursorSize = recoilAmount * 4400;
 
         weaponAmmoTextNormal.gameObject.SetActive(!(ammo <= maxAmmo / 4));
         weaponAmmoTextAlert.gameObject.SetActive(ammo <= maxAmmo / 4);
@@ -85,7 +87,7 @@ public class Gun : MonoBehaviour
         weaponAmmoTextAlert.text = ammo + "";
 
         weaponMagText.text = mag + "";
-
+        
         if (isEnabled)
         {
             targetCursorSize = Mathf.Lerp(targetCursorSize , cursorSize , 6 * Time.deltaTime);
@@ -101,7 +103,7 @@ public class Gun : MonoBehaviour
     void AddRecoil()
     {
         targetCursorSize += 400;
-        targetRecoilSize += 0.05f;
+        targetRecoilSize += 0.025f;
     }
 
     public void Shot(GameObject bullet, bool isAmining)
@@ -112,18 +114,23 @@ public class Gun : MonoBehaviour
         ammo--;
         Bullet b = Instantiate(bullet, barel.position, Quaternion.identity).GetComponent<Bullet>();
 
-        RaycastHit hitPoint;
-        Ray ray = new Ray(cam.position, cam.forward);
-        
-        Physics.Raycast(ray, out hitPoint, 100f, layers);
 
         Vector3 recoilAddVector = transform.parent.GetComponent<WeponsHolder>().isAiming ?
-            new Vector3(Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f)) :
+            new Vector3(Random.Range(-aimRecoil, aimRecoil), Random.Range(-aimRecoil, aimRecoil),
+            Random.Range(-aimRecoil, aimRecoil)) :
             new Vector3(Random.Range(-currentRecoilSize, currentRecoilSize),
             Random.Range(-currentRecoilSize, currentRecoilSize), Random.Range(-currentRecoilSize, currentRecoilSize));
-        b.transform.forward = (hitPoint.point - barel.position) + recoilAddVector;
-        b.shootPosition = transform.position;
 
+        RaycastHit hitPoint;
+        Ray ray = new Ray(cam.position, cam.forward + recoilAddVector);
+        Physics.Raycast(ray, out hitPoint, 100f, layers);
+
+        ParticleSystem ie = Instantiate(impactEffect, hitPoint.point,
+            Quaternion.LookRotation(hitPoint.normal)).GetComponent<ParticleSystem>();
+        ie.Play();
+        StartCoroutine(DestroyAfterTime(ie.gameObject));
+
+        b.hitPosition = hitPoint.point;
         b.transform.GetChild(0).GetComponent<ParticleSystem>().Play();
 
         muzzleFlash.Play();
@@ -161,5 +168,11 @@ public class Gun : MonoBehaviour
     {
         isReloading = false;
         anim.Play("Idle");
+    }
+
+    IEnumerator DestroyAfterTime(GameObject gb)
+    {
+        yield return new WaitForSeconds(1f);
+        Destroy(gb);
     }
 }
