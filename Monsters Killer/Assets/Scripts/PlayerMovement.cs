@@ -6,16 +6,15 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] Transform headHolder;
-    //Animator anim;
-
     float xRotation;
-    bool isGrounded = false;
+    public bool isGrounded = false;
     Rigidbody rb;
     float jumpForce = 5;
-    float speed = 2;
-    Vector3 movement;
+    public float speed = 2;
+    public Vector3 movement;
     Vector2 lookMovement;
     public float senstivity = 10f;
+    public WeponsHolder weponsHolder;
 
 
     public void OnMove(InputAction.CallbackContext value)
@@ -34,6 +33,10 @@ public class PlayerMovement : MonoBehaviour
         {
             case InputActionPhase.Started:
                 speed = 4;
+                if (weponsHolder.aimGun)
+                {
+                    weponsHolder.StopAim();
+                }
                 break;
             case InputActionPhase.Canceled:
                 speed = 2;
@@ -55,13 +58,16 @@ public class PlayerMovement : MonoBehaviour
     {
         if (value.performed && isGrounded)
         {
+            if (weponsHolder.aimGun)
+            {
+                weponsHolder.StopAim();
+            }
             Jump();
         }
     }
 
     void Start()
     {
-       //anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         speed = Application.platform == RuntimePlatform.Android ? 4 : 2;
     }
@@ -73,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        //headHolder.position = head.position + head.forward * offset.z + new Vector3(0,offset.y,0);
+       
     }
 
     private void LateUpdate()
@@ -83,8 +89,6 @@ public class PlayerMovement : MonoBehaviour
 
     void Move()
     {
-        //anim.SetFloat("X", (movement.x * speed) / 4.0f);
-        //anim.SetFloat("Y", (movement.z * speed) / 4.0f);
         transform.Translate(movement * speed * Time.deltaTime);
     }
 

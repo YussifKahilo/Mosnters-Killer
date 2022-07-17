@@ -8,27 +8,15 @@ public class HeadBobbing : MonoBehaviour
     public Transform headTransform;
 
     public float bobFrequency = 5f;
+    float frequency;
     public float bobHorizontalAmplitude = 0.1f;
     public float bobVerticalAmplitude = 0.1f;
     public float headBobSmoothing = 0.1f;
 
-    private bool isWalking = false;
     private float walkingTime;
     private Vector3 targetCameraPosition;
 
-    public Transform groundCheck;
-    public LayerMask groundLyaers;
-    public float groundCheckRadius;
-
-    private bool grounded;
-
-   // public bl_Joystick joystick;
-    float vertical = 0, horizontal = 0;
-
-    private void FixedUpdate()
-    {
-        grounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLyaers);
-    }
+    [SerializeField] PlayerMovement playerMovement;
 
     // Start is called before the first frame update
     void Start()
@@ -38,31 +26,43 @@ public class HeadBobbing : MonoBehaviour
 
     private void LateUpdate()
     {
-        /*vertical = joystick.Vertical;
-        horizontal = joystick.Horizontal;*/
-
-        if ((vertical >= 1 || vertical <= -1
-            || horizontal >= 1 || horizontal <= -1) && grounded)
-        {
-            isWalking = true;
-        }
-        else
-        {
-            isWalking = false;
-        }
-
-        if (!isWalking)
-        {
-            walkingTime = 0;
-        }
-        else
+        if (playerMovement.isGrounded)
         {
             walkingTime += Time.deltaTime;
         }
+        else
+        {
+            walkingTime = 0;
+        }
+
+        if (playerMovement.weponsHolder.aimGun)
+        {
+            frequency = 0.5f;
+            bobHorizontalAmplitude = 0.002f;
+            bobVerticalAmplitude = 0.002f;
+        }
+        else
+        {
+
+            if (playerMovement.movement.magnitude > 0)
+            {
+                frequency = bobFrequency * (playerMovement.speed > 2 ? 2 : 1);
+                bobHorizontalAmplitude = playerMovement.speed > 2 ? 0.1f : 0.05f;
+                bobVerticalAmplitude = playerMovement.speed > 2 ? 0.1f : 0.05f;
+            }
+            else
+            {
+                frequency = 1.25f;
+                bobHorizontalAmplitude = 0.01f;
+                bobVerticalAmplitude = 0.01f;
+            }
+        }
+        
 
         targetCameraPosition = headTransform.position + CalculateHeadBobOffset(walkingTime);
 
-        cameraTransform.position = Vector3.Lerp(cameraTransform.position, targetCameraPosition, headBobSmoothing);
+        cameraTransform.position = Vector3.Lerp(cameraTransform.position, targetCameraPosition,
+            playerMovement.weponsHolder.aimGun ? 10 : headBobSmoothing);
 
         if ((cameraTransform.position - targetCameraPosition).magnitude <= 0.001)
         {
@@ -80,8 +80,8 @@ public class HeadBobbing : MonoBehaviour
 
         if (t > 0)
         {
-            horizontalOffset = Mathf.Cos(t * bobFrequency) * bobHorizontalAmplitude;
-            verticalOffset = Mathf.Sin(t * bobFrequency * 2) * bobVerticalAmplitude;
+            horizontalOffset = Mathf.Cos(t * frequency) * bobHorizontalAmplitude;
+            verticalOffset = Mathf.Sin(t * frequency * 2) * bobVerticalAmplitude;
 
             offset = headTransform.right * horizontalOffset + headTransform.up * verticalOffset;
 

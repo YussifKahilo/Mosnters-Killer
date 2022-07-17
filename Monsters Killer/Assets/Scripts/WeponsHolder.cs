@@ -10,6 +10,7 @@ public class WeponsHolder : MonoBehaviour
     [SerializeField] Gun[] guns;
     [SerializeField] Camera cam;
     [SerializeField] TextMeshProUGUI screenAmmpText;
+    [SerializeField] Recoil headRecoil;
 
     Gun firstGun;
     Gun secondGun;
@@ -28,11 +29,11 @@ public class WeponsHolder : MonoBehaviour
 
     bool isFireing = false;
     bool isChangingWeapon = false;
-    bool isAiming = false;
+    public bool isAiming = false;
 
     public bool aimGun = false;
 
-    bool changeAimView = false;
+    public bool changeAimView = false;
     float aimLerpDuration = 0.1f;
     float aimTimeElapsed;
 
@@ -101,6 +102,9 @@ public class WeponsHolder : MonoBehaviour
         if (changeIndex == num || isChangingWeapon)
             return;
 
+        if(CurrentGun().isReloading)
+            CurrentGun().EndReload();
+
         isChangingWeapon = true;
         changeIndex = num;
         anim.SetTrigger("Change Weapon");
@@ -111,39 +115,51 @@ public class WeponsHolder : MonoBehaviour
     {
         if (value.started)
         {
-            isAiming = !isAiming;
-            aimGun = isAiming;
-            if (isAiming)
-            {
-                playerMovement.senstivity /= 3;
-                recoilX /= 2;
-                recoilY /= 2;
-                recoilZ /= 2;
-            }
-            else
-            {
-                playerMovement.senstivity *= 3;
-                recoilX *= 2;
-                recoilY *= 2;
-                recoilZ *= 2;
-            }
-
-            if(!CurrentGun().isReloading)
-                changeAimView = true;
+            StartAim();
 
         }else if (value.canceled && Gamepad.current != null)
         {
-            isAiming = false;
-            aimGun = isAiming;
+            StopAim();
+        }
+    }
+
+    void StartAim()
+    {
+        if (!playerMovement.isGrounded || playerMovement.speed > 3)
+            return;
+
+        isAiming = !isAiming;
+        aimGun = isAiming;
+        if (isAiming)
+        {
+            playerMovement.senstivity /= 3;
+            recoilX /= 2;
+            recoilY /= 2;
+            recoilZ /= 2;
+        }
+        else
+        {
             playerMovement.senstivity *= 3;
             recoilX *= 2;
             recoilY *= 2;
             recoilZ *= 2;
-
-            if (!CurrentGun().isReloading)
-                changeAimView = true;
-
         }
+
+        if (!CurrentGun().isReloading)
+            changeAimView = true;
+    }
+
+    public void StopAim()
+    {
+        isAiming = false;
+        aimGun = isAiming;
+        playerMovement.senstivity *= 3;
+        recoilX *= 2;
+        recoilY *= 2;
+        recoilZ *= 2;
+
+        if (!CurrentGun().isReloading)
+            changeAimView = true;
     }
 
     // Start is called before the first frame update
@@ -157,6 +173,7 @@ public class WeponsHolder : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Aiming();
         if (isChangingWeapon)
         {
             ChangeWeights();
@@ -168,15 +185,12 @@ public class WeponsHolder : MonoBehaviour
             if (Time.time >= nextTimeToFire)
             {
                 nextTimeToFire = Time.time + 1f / CurrentGun().fireRate;
-                
-                transform.parent.parent.GetComponent<Recoil>().FireRecoilRotation(isAiming? 0.5f : recoilX,
-                    isAiming ? 0.5f : recoilY, isAiming ? 0.5f : recoilZ);
+
+                headRecoil.FireRecoilRotation(isAiming? 0.5f : recoilX, isAiming ? 0.5f :
+                    recoilY, isAiming ? 0.5f : recoilZ);
                 CurrentGun().Shot(bullet , isAiming);
             }
         }
-
-        Aiming();
-        
     }
 
     void ChangeWeights()
@@ -229,8 +243,9 @@ public class WeponsHolder : MonoBehaviour
     void Aiming()
     {
 
-        if (CurrentGun().isReloading && aimGun && isAiming)
+        if ((CurrentGun().isReloading || isChangingWeapon )&& aimGun && isAiming)
         {
+            isAiming = !isChangingWeapon;
             aimGun = false;
             changeAimView = true;
         }
@@ -266,15 +281,14 @@ public class WeponsHolder : MonoBehaviour
         CurrentGun().gameObject.SetActive(true);
         PrevGun().gameObject.SetActive(false);
         higheringWeight = true;
-        //Invoke("HighLeftWeight" , 0.18f);
     }
 
     public void ChangeAnimationEnded()
     {
-        //isChangingWeapon = false;
+        //anim.SetTrigger("Change Weapon");
     }
 
-    public void StartAnimation(string animName)
+    public void StartReloadAnimation(string animName)
     {
         anim.SetTrigger("Reload " + animName);
     }

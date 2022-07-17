@@ -6,6 +6,7 @@ public class Bullet : MonoBehaviour
 {
     [SerializeField] int bulletSpeed;
     [SerializeField] GameObject impactEffect;
+    public Vector3 shootPosition;
     Rigidbody rb;
 
     // Start is called before the first frame update
@@ -13,14 +14,10 @@ public class Bullet : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.AddForce(transform.forward * bulletSpeed * Time.deltaTime, ForceMode.Impulse);
-        //Invoke("AdjustSpeed" , 0.1f);
         StartCoroutine(DestroyAfterTime());
     }
 
-    void AdjustSpeed()
-    {
-        rb.AddForce(transform.forward * bulletSpeed * Time.deltaTime, ForceMode.Impulse);
-    }
+
 
     IEnumerator DestroyAfterTime()
     {
@@ -30,6 +27,7 @@ public class Bullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        Transform ie= Instantiate(impactEffect, transform.position, Quaternion.LookRotation(shootPosition - transform.position)).transform;
         Destroy(gameObject);
     }
 
