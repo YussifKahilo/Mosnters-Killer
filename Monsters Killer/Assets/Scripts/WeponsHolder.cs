@@ -14,6 +14,7 @@ public class WeponsHolder : MonoBehaviour
 
     Gun firstGun;
     Gun secondGun;
+    Gun newGun;
 
     int changeIndex = -1;
     float changeTimeElapsed = 0;
@@ -23,12 +24,13 @@ public class WeponsHolder : MonoBehaviour
     [SerializeField] Vector3 normalHandPosition;
     [SerializeField] Vector3 aimHandPosition;
 
-    [SerializeField]float recoilX = 2 , recoilY = 2 , recoilZ = 2;
+    [SerializeField] float recoilX = 2, recoilY = 2, recoilZ = 2;
 
     Animator anim;
 
     public bool isFireing = false;
     bool isChangingWeapon = false;
+    bool baughtNewGun = false;
     public bool isAiming = false;
 
     public bool aimGun = false;
@@ -41,7 +43,7 @@ public class WeponsHolder : MonoBehaviour
     float noramlFov = 60;
 
 
-    float nextTimeToFire ;
+    float nextTimeToFire;
 
     public void OnFire(InputAction.CallbackContext value)
     {
@@ -101,10 +103,10 @@ public class WeponsHolder : MonoBehaviour
 
     public void Switch(int num)
     {
-        if (changeIndex == num || isChangingWeapon || secondGun == null)
+        if (changeIndex == num || isChangingWeapon || baughtNewGun || secondGun == null)
             return;
 
-        if(CurrentGun().isReloading)
+        if (CurrentGun().isReloading)
             CurrentGun().EndReload();
 
         isChangingWeapon = true;
@@ -119,7 +121,7 @@ public class WeponsHolder : MonoBehaviour
         {
             StartAim();
 
-        }else if (value.canceled && Gamepad.current != null)
+        } else if (value.canceled && Gamepad.current != null)
         {
             StopAim();
         }
@@ -175,7 +177,13 @@ public class WeponsHolder : MonoBehaviour
         Aiming();
         if (isChangingWeapon)
         {
-            ChangeWeights();
+            ChangeWeights(PrevGun(), CurrentGun());
+            return;
+        }
+
+        if (baughtNewGun)
+        {
+            NewWeaponChangeWeight();
             return;
         }
 
@@ -184,22 +192,22 @@ public class WeponsHolder : MonoBehaviour
         {
             if (Time.time >= nextTimeToFire)
             {
-                nextTimeToFire = Time.time + 1f / CurrentGun().fireRate;
+                nextTimeToFire = Time.time + 1f / CurrentGun().data.fireRate;
 
-                headRecoil.FireRecoilRotation(isAiming? 0.5f : recoilX, isAiming ? 0.5f :
+                headRecoil.FireRecoilRotation(isAiming ? 0.5f : recoilX, isAiming ? 0.5f :
                     recoilY, isAiming ? 0.5f : recoilZ);
-                CurrentGun().Shot(bullet , isAiming);
+                CurrentGun().Shot(bullet, isAiming);
             }
         }
     }
 
     public void ChangeWeapon(MapWeapon weapon)
     {
-        if (weapon.weaponId == firstGun.weaponId)
+        if (weapon.weaponId == firstGun.data.weaponId)
         {
             firstGun.RestWeapon();
         }
-        else if(secondGun != null && weapon.weaponId == secondGun.weaponId)
+        else if (secondGun != null && weapon.weaponId == secondGun.data.weaponId)
         {
             secondGun.RestWeapon();
         }
@@ -213,42 +221,60 @@ public class WeponsHolder : MonoBehaviour
             }
             else
             {
-                if (CurrentGun() == firstGun)
-                {
-                    MapWeaponsManager.instance.weapons[firstGun.weaponId].isWithPlayer = false;
-                    firstGun = guns[weapon.weaponId];
-                    firstGun.RestWeapon();
-                    //play animation to switch
-                }
-                else
-                {
-                    MapWeaponsManager.instance.weapons[secondGun.weaponId].isWithPlayer = false;
-                    secondGun = guns[weapon.weaponId];
-                    secondGun.RestWeapon();
-                    //play animation to switch
-                }
+                if(CurrentGun() != guns[0])
+                    MapWeaponsManager.instance.weapons[CurrentGun().data.weaponId - 1].isWithPlayer = false;
+
+                anim.SetTrigger("Weapon Buy");
+                newGun = guns[weapon.weaponId];
             }
         }
     }
 
-    void ChangeWeights()
+    public void ChangeWeapon()
+    {
+        baughtNewGun = true;
+    }
+
+    void NewWeaponChangeWeight()
+    {
+        if (baughtNewGun)
+        {
+            if (CurrentGun() == firstGun)
+            {
+                firstGun.gameObject.SetActive(false);
+                firstGun = newGun;
+            }
+            else
+            {
+                secondGun.gameObject.SetActive(false);
+                secondGun = newGun;
+            }
+            CurrentGun().rightHandConstraint.weight = 0.0f;
+            CurrentGun().leftHandConstraint.weight = 0.0f;
+            newGun.RestWeapon();
+            newGun.rightHandConstraint.weight = 1.0f;
+            newGun.leftHandConstraint.weight = 1.0f;
+            newGun.gameObject.SetActive(true);
+            baughtNewGun = false;
+        }
+    }
+
+    void ChangeWeights(Gun gun1, Gun gun2)
     {
         if (loweringWeight)
         {
             if (changeTimeElapsed < 0.4f)
             {
-                PrevGun().leftHandConstraint.weight = Mathf.Lerp(1 , 0 , changeTimeElapsed / 0.4f);
-                //PrevGun().rightHandConstraint.weight = Mathf.Lerp(1, 0.5f, changeTimeElapsed / 0.4f);
+                gun1.leftHandConstraint.weight = Mathf.Lerp(1, 0, changeTimeElapsed / 0.4f);
 
-                //CurrentGun().rightHandConstraint.weight = Mathf.Lerp(0, 0.5f, changeTimeElapsed / 0.4f);
                 changeTimeElapsed += Time.deltaTime;
             }
             else
             {
-                PrevGun().leftHandConstraint.weight = 0;
+                gun1.leftHandConstraint.weight = 0;
 
-                PrevGun().rightHandConstraint.weight = 0f;
-                CurrentGun().rightHandConstraint.weight = 1f;
+                gun1.rightHandConstraint.weight = 0f;
+                gun2.rightHandConstraint.weight = 1f;
 
                 changeTimeElapsed = 0;
                 loweringWeight = false;
@@ -259,13 +285,13 @@ public class WeponsHolder : MonoBehaviour
         {
             if (changeTimeElapsed < 0.4f)
             {
-                CurrentGun().leftHandConstraint.weight = Mathf.Lerp(0, 1, changeTimeElapsed / 0.4f);
+                gun2.leftHandConstraint.weight = Mathf.Lerp(0, 1, changeTimeElapsed / 0.4f);
 
                 changeTimeElapsed += Time.deltaTime;
             }
             else
             {
-                CurrentGun().leftHandConstraint.weight = 1;
+                gun2.leftHandConstraint.weight = 1;
                 changeTimeElapsed = 0;
                 higheringWeight = false;
                 isChangingWeapon = false;
@@ -281,9 +307,9 @@ public class WeponsHolder : MonoBehaviour
     void Aiming()
     {
 
-        if ((CurrentGun().isReloading || isChangingWeapon )&& aimGun && isAiming)
+        if ((CurrentGun().isReloading || isChangingWeapon || baughtNewGun) && aimGun && isAiming)
         {
-            isAiming = !isChangingWeapon;
+            isAiming = !isChangingWeapon && !baughtNewGun;
             aimGun = false;
             changeAimView = true;
         }

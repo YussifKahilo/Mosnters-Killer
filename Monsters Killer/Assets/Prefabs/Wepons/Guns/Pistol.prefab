@@ -405,7 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b71771e65243384999217b3d29f3406, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  impactEffect: {fileID: 2514123159008390996, guid: a892361252a76924896dc46b9d69847d, type: 3}
+  data: {fileID: 11400000, guid: b0edb9c1d6cbdee419456ced37503300, type: 2}
   weaponAmmoTextNormal: {fileID: 797572553}
   weaponAmmoTextAlert: {fileID: 1025022737}
   weaponMagText: {fileID: 8885766938433055218}
@@ -413,30 +413,11 @@ MonoBehaviour:
   cam: {fileID: 0}
   cursor: {fileID: 0}
   muzzleFlash: {fileID: 3864198071656197856}
+  handsConstraint: {fileID: 0}
   rightHandConstraint: {fileID: 0}
   leftHandConstraint: {fileID: 0}
-  recoilRotationX: 10
-  recoilRotationY: 4
-  recoilRotationZ: 4
-  recoilPositionX: 0.01
-  recoilPositionY: 0.01
-  recoilPositionZ: 0.01
-  reloadWeaponDir: Down
-  layers:
-    serializedVersion: 2
-    m_Bits: 127
-  fireRate: 2
-  aimRecoil: 0.025
-  recoil: 0.05
-  damage: 10
-  maxMag: 80
-  mag: 72
-  maxAmmo: 8
-  ammo: 8
   isReloading: 0
   canShoot: 1
-  currentRecoilSize: 0
-  playerMovement: {fileID: 0}
 --- !u!114 &5212815826089250913
 MonoBehaviour:
   m_ObjectHideFlags: 0

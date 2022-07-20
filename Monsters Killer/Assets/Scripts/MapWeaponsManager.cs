@@ -33,6 +33,10 @@ public class MapWeaponsManager : MonoBehaviour
                     ( weapons[i].isWithPlayer ? " Ammo" : "") + " For " + price + " Point");
             }
         }
+        if (!buyFlag)
+        {
+            UiGameManager.instance.ShowMapWeaponHintMessange("");
+        }
         canBuy = buyFlag;
         buyFlag = false;
     }

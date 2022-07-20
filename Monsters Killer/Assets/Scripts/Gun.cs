@@ -6,93 +6,84 @@ using UnityEngine.Animations.Rigging;
 
 public class Gun : MonoBehaviour
 {
-    public int weaponId;
+    public GunData data;
 
-    [SerializeField] GameObject impactEffect;
     [SerializeField] TextMeshProUGUI weaponAmmoTextNormal , weaponAmmoTextAlert, weaponMagText;
     [SerializeField] Transform barel;
     [SerializeField] Transform cam;
     float cursorSize;
     public RectTransform cursor;
     [SerializeField] ParticleSystem muzzleFlash;
-    public TwoBoneIKConstraint rightHandConstraint, leftHandConstraint;
-    public float recoilRotationX, recoilRotationY, recoilRotationZ;
-    [SerializeField] float recoilPositionX, recoilPositionY, recoilPositionZ;
-    [SerializeField] string reloadWeaponDir;
-    [SerializeField] LayerMask layers;
-    public float fireRate;
-    [SerializeField] float aimRecoil;
-    [SerializeField] float recoil;
-    [SerializeField] float damage;
-    [SerializeField] int maxMag;
-    public int mag;
-    [SerializeField] int maxAmmo;
-    public int ammo;
 
-    bool isEnabled = false;
+    [SerializeField] Transform handsConstraint;
+    [HideInInspector] public TwoBoneIKConstraint rightHandConstraint, leftHandConstraint;
+
+
     Animator anim;
     public bool isReloading = false;
     public bool canShoot = true;
 
     float targetRecoilSize;
-    [SerializeReference] float currentRecoilSize;
+    float currentRecoilSize;
 
     float targetCursorSize;
     float currentCursorSize;
 
     float recoilAmount;
-    [SerializeReference] PlayerMovement playerMovement;
 
     private void OnEnable()
     {
-        isEnabled = true;
-        if (ammo == 0)
+        if (data.ammo == 0)
         {
             Reload();
         }
     }
 
-    private void OnDisable()
-    {
-        isEnabled = false;
-    }
-
     private void Start()
     {
         anim = GetComponent<Animator>();
-        cursorSize = 3600 * recoil;
+
+        rightHandConstraint = handsConstraint.GetChild(0).GetComponent<TwoBoneIKConstraint>();
+        leftHandConstraint = handsConstraint.GetChild(1).GetComponent<TwoBoneIKConstraint>();
+
+        SetCursor();
+        RestWeapon();
+    }
+
+    void SetCursor()
+    {
+        cursorSize = 3600 * data.recoil;
         targetCursorSize = cursorSize;
         currentCursorSize = cursorSize;
-        targetRecoilSize = recoil;
-        currentRecoilSize = recoil;
-        recoilAmount = recoil;
-
-        RestWeapon();
+        targetRecoilSize = data.recoil;
+        currentRecoilSize = data.recoil;
+        recoilAmount = data.recoil;
     }
 
     public void RestWeapon()
     {
-        mag = maxMag;
-        ammo = maxAmmo;
+        data.mag = data.maxMag;
+        data.ammo = data.maxAmmo;
     }
 
     private void Update()
     {
-        recoilAmount = recoil + (playerMovement.movement.magnitude > 0 ? 0.05f : 0);
+        recoilAmount = data.recoil + (GameManager.instance.playerManager
+            .GetComponent<PlayerMovement>().movement.magnitude > 0 ? 0.05f : 0);
         
 
         canShoot = !isReloading;
         cursorSize = recoilAmount * 3600;
 
-        weaponAmmoTextNormal.gameObject.SetActive(!(ammo <= maxAmmo / 4));
-        weaponAmmoTextAlert.gameObject.SetActive(ammo <= maxAmmo / 4);
+        weaponAmmoTextNormal.gameObject.SetActive(!(data.ammo <= data.maxAmmo / 4));
+        weaponAmmoTextAlert.gameObject.SetActive(data.ammo <= data.maxAmmo / 4);
 
-        weaponAmmoTextNormal.text = ammo + "";
-        weaponAmmoTextAlert.text = ammo + "";
+        weaponAmmoTextNormal.text = data.ammo + "";
+        weaponAmmoTextAlert.text = data.ammo + "";
 
-        weaponMagText.text = mag + "";
+        weaponMagText.text = data.mag + "";
         
-        if (isEnabled)
+        if (enabled)
         {
             targetCursorSize = Mathf.Lerp(targetCursorSize , cursorSize , 6 * Time.deltaTime);
             currentCursorSize = Mathf.Lerp(currentCursorSize , targetCursorSize , 5 * Time.fixedDeltaTime);
@@ -112,24 +103,24 @@ public class Gun : MonoBehaviour
 
     public void Shot(GameObject bullet, bool isAmining)
     {
-        if (ammo == 0)
+        if (data.ammo == 0)
             Reload();
 
-        ammo--;
+        data.ammo--;
         Bullet b = Instantiate(bullet, barel.position, Quaternion.identity).GetComponent<Bullet>();
 
 
         Vector3 recoilAddVector = transform.parent.GetComponent<WeponsHolder>().isAiming ?
-            new Vector3(Random.Range(-aimRecoil, aimRecoil), Random.Range(-aimRecoil, aimRecoil),
-            Random.Range(-aimRecoil, aimRecoil)) :
+            new Vector3(Random.Range(-data.aimRecoil, data.aimRecoil), Random.Range(-data.aimRecoil, data.aimRecoil),
+            Random.Range(-data.aimRecoil, data.aimRecoil)) :
             new Vector3(Random.Range(-currentRecoilSize, currentRecoilSize),
             Random.Range(-currentRecoilSize, currentRecoilSize), Random.Range(-currentRecoilSize, currentRecoilSize));
 
         RaycastHit hitPoint;
         Ray ray = new Ray(cam.position, cam.forward + recoilAddVector);
-        Physics.Raycast(ray, out hitPoint, 100f, layers);
+        Physics.Raycast(ray, out hitPoint, 100f, data.layers);
 
-        ParticleSystem ie = Instantiate(impactEffect, hitPoint.point,
+        ParticleSystem ie = Instantiate(data.impactEffect, hitPoint.point,
             Quaternion.LookRotation(hitPoint.normal)).GetComponent<ParticleSystem>();
         ie.Play();
         StartCoroutine(DestroyAfterTime(ie.gameObject , 4));
@@ -139,12 +130,12 @@ public class Gun : MonoBehaviour
 
         muzzleFlash.Play();
         AddRecoil();
-        GetComponent<Recoil>().FireRecoilRotation((isAmining ? 0.5f : recoilRotationX),
-            (isAmining ? 0.5f : recoilRotationY), (isAmining ? 0.5f : recoilRotationZ));
-        GetComponent<Recoil>().FireRecoilPosition((isAmining ? 0.001f : recoilPositionX),
-            (isAmining ? 0.001f : recoilPositionY), (isAmining ? 0.001f : recoilPositionZ));
+        GetComponent<Recoil>().FireRecoilRotation((isAmining ? 0.5f : data.recoilRotationX),
+            (isAmining ? 0.5f : data.recoilRotationY), (isAmining ? 0.5f : data.recoilRotationZ));
+        GetComponent<Recoil>().FireRecoilPosition((isAmining ? 0.001f : data.recoilPositionX),
+            (isAmining ? 0.001f : data.recoilPositionY), (isAmining ? 0.001f : data.recoilPositionZ));
 
-        if (ammo == 0)
+        if (data.ammo == 0)
         {
             Reload();
         }
@@ -152,10 +143,10 @@ public class Gun : MonoBehaviour
 
     public void Reload()
     {
-        if (mag == 0 || ammo == maxAmmo || isReloading)
+        if (data.mag == 0 || data.ammo == data.maxAmmo || isReloading)
             return;
 
-        transform.parent.GetComponent<WeponsHolder>().StartReloadAnimation(reloadWeaponDir);
+        transform.parent.GetComponent<WeponsHolder>().StartReloadAnimation(data.reloadWeaponDir);
         anim.SetTrigger("Reload");
         isReloading = true;
     }
@@ -163,9 +154,9 @@ public class Gun : MonoBehaviour
     public void Reloaded()
     {
         EndReload();
-        int amount = (maxAmmo < mag ? maxAmmo : mag) - ammo;
-        ammo += amount;
-        mag -= amount;
+        int amount = (data.maxAmmo < data.mag ? data.maxAmmo : data.mag) - data.ammo;
+        data.ammo += amount;
+        data.mag -= amount;
     }
 
     public void EndReload()
@@ -176,7 +167,7 @@ public class Gun : MonoBehaviour
 
     public bool IsFullAmmo()
     {
-        return mag == maxMag && ammo == maxAmmo;
+        return data.mag == data.maxMag && data.ammo == data.maxAmmo;
     }
 
     IEnumerator DestroyAfterTime(GameObject gb , float time)

@@ -16,7 +16,6 @@ public class PlayerManager : MonoBehaviour
     {
         if (value.started)
         {
-            print("Buy");
             if (MapWeaponsManager.instance.canBuy)
             {
                 MapWeapon weapon = MapWeaponsManager.instance.BuyWeapon();
@@ -41,6 +40,13 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    public void OnPause(InputAction.CallbackContext value)
+    {
+        if (value.started)
+        {
+            UiGameManager.instance.PauseGame();
+        }
+    }
     // Start is called before the first frame update
     void Start()
     {

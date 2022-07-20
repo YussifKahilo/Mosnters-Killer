@@ -2,13 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class UiGameManager : MonoBehaviour
 {
+    [SerializeField] Text weaponHintText;
+
 
     public static UiGameManager instance;
 
-    public void OnPause(InputAction.CallbackContext value)
+    public void PauseGame()
     {
 
     }
@@ -25,7 +28,7 @@ public class UiGameManager : MonoBehaviour
 
     public void ShowMapWeaponHintMessange(string msg)
     {
-        Debug.Log(msg);
+        weaponHintText.text = msg;
     }
 
 }

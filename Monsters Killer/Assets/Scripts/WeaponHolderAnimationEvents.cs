@@ -13,4 +13,9 @@ public class WeaponHolderAnimationEvents : MonoBehaviour
     {
         transform.GetChild(0).GetComponent<WeponsHolder>().ChangeAnimationEnded();
     }
+
+    public void WeaponBuy()
+    {
+        transform.GetChild(0).GetComponent<WeponsHolder>().ChangeWeapon();
+    }
 }
