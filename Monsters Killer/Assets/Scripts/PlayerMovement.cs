@@ -6,16 +6,19 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] Transform headHolder;
+    [SerializeField] float maxXRotation = 90;
     float xRotation;
     public bool isGrounded = false;
     Rigidbody rb;
     float jumpForce = 5;
     public float speed = 2;
     public Vector3 movement;
-    Vector2 lookMovement;
-    public float senstivity = 10f;
-    public WeponsHolder weponsHolder;
 
+    Vector2 lookRotation;
+
+    public float senstivity = 10f;
+    public float aimSenstivity = 3.5f;
+    WeponsHolder weponsHolder;
 
     public void OnMove(InputAction.CallbackContext value)
     {
@@ -51,7 +54,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Setlooking(float x, float y)
     {
-        lookMovement = new Vector2(x, y) * senstivity * Time.deltaTime;
+        lookRotation = new Vector2(x, y) *(weponsHolder.aimGun ? aimSenstivity : senstivity )* Time.deltaTime;
     }
 
     public void OnJump(InputAction.CallbackContext value)
@@ -68,6 +71,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        weponsHolder = GetComponent<PlayerManager>().weponsHolder;
         rb = GetComponent<Rigidbody>();
         speed = Application.platform == RuntimePlatform.Android ? 4 : 2;
     }
@@ -93,10 +97,10 @@ public class PlayerMovement : MonoBehaviour
     }
 
     void Look()
-    {
-        xRotation = Mathf.Clamp(xRotation - lookMovement.y , -60 , 60);
+    {         
+        xRotation = Mathf.Clamp(xRotation - lookRotation.y , -maxXRotation, maxXRotation);
         headHolder.localRotation = Quaternion.Euler(xRotation , 0 , 0);
-        transform.Rotate(transform.up , lookMovement.x );
+        transform.Rotate(transform.up , lookRotation.x);
     }
 
     void Jump()

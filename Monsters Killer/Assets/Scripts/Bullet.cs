@@ -12,7 +12,6 @@ public class Bullet : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position , hitPosition , bulletSpeed);
         if (transform.position == hitPosition)
         {
-            print("Here");
             Destroy(gameObject);
         }
     }

@@ -16,12 +16,13 @@ public class HeadBobbing : MonoBehaviour
     private float walkingTime;
     private Vector3 targetCameraPosition;
 
-    [SerializeField] PlayerMovement playerMovement;
+    [SerializeField] PlayerManager playerManager;
+    PlayerMovement playerMovement;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        playerMovement = playerManager.GetComponent<PlayerMovement>();
     }
 
     private void LateUpdate()
@@ -35,11 +36,14 @@ public class HeadBobbing : MonoBehaviour
             walkingTime = 0;
         }
 
-        if (playerMovement.weponsHolder.aimGun)
+        if (playerManager.weponsHolder.aimGun)
         {
-            frequency = 0.5f;
-            bobHorizontalAmplitude = 0.002f;
-            bobVerticalAmplitude = 0.002f;
+            frequency = 0.5f + (playerMovement.movement.magnitude > 0 
+                && !playerManager.weponsHolder.isFireing ? 4.5f : 0);
+            bobHorizontalAmplitude = 0.002f + (playerMovement.movement.magnitude > 0
+                && !playerManager.weponsHolder.isFireing ? 0.002f : 0);
+            bobVerticalAmplitude = 0.002f + (playerMovement.movement.magnitude > 0
+                && !playerManager.weponsHolder.isFireing ? 0.002f : 0);
         }
         else
         {
@@ -62,7 +66,7 @@ public class HeadBobbing : MonoBehaviour
         targetCameraPosition = headTransform.position + CalculateHeadBobOffset(walkingTime);
 
         cameraTransform.position = Vector3.Lerp(cameraTransform.position, targetCameraPosition,
-            playerMovement.weponsHolder.aimGun ? 10 : headBobSmoothing);
+            playerManager.weponsHolder.aimGun ? 10 : headBobSmoothing);
 
         if ((cameraTransform.position - targetCameraPosition).magnitude <= 0.001)
         {

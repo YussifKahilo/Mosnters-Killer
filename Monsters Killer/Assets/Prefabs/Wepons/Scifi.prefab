@@ -806,7 +806,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5842356731947277567
 Transform:
   m_ObjectHideFlags: 0
@@ -839,32 +839,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b71771e65243384999217b3d29f3406, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cam: {fileID: 0}
-  fireRate: 10
-  rightHandConstraint: {fileID: 0}
-  leftHandConstraint: {fileID: 0}
-  layers:
-    serializedVersion: 2
-    m_Bits: 63
-  recoilRotationX: 6
-  recoilRotationY: 4
-  recoilRotationZ: 4
-  recoilPositionX: 0.01
-  recoilPositionY: 0.01
-  recoilPositionZ: 0.01
-  muzzleFlash: {fileID: 3022316462586830569}
-  barel: {fileID: 3863288023424850879}
-  damage: 20
-  maxMag: 320
-  mag: 300
-  maxAmmo: 20
-  ammo: 20
-  reloadWeaponDir: Up
+  impactEffect: {fileID: 2514123159008390996, guid: a892361252a76924896dc46b9d69847d, type: 3}
   weaponAmmoTextNormal: {fileID: 3863288024739244328}
   weaponAmmoTextAlert: {fileID: 3863288023630110434}
   weaponMagText: {fileID: 3863288024992601681}
+  barel: {fileID: 3863288023424850879}
+  cam: {fileID: 0}
+  cursor: {fileID: 0}
+  muzzleFlash: {fileID: 3022316462586830569}
+  rightHandConstraint: {fileID: 0}
+  leftHandConstraint: {fileID: 0}
+  recoilRotationX: 5
+  recoilRotationY: 5
+  recoilRotationZ: 5
+  recoilPositionX: 0.01
+  recoilPositionY: 0.01
+  recoilPositionZ: 0.01
+  reloadWeaponDir: Up
+  layers:
+    serializedVersion: 2
+    m_Bits: 63
+  fireRate: 5
+  aimRecoil: 0.025
+  recoil: 0.06
+  damage: 50
+  maxMag: 320
+  mag: 290
+  maxAmmo: 30
+  ammo: 30
   isReloading: 0
   canShoot: 1
+  currentRecoilSize: 0
+  playerMovement: {fileID: 0}
 --- !u!114 &6512179578069583428
 MonoBehaviour:
   m_ObjectHideFlags: 0

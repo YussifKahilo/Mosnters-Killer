@@ -27,7 +27,7 @@ public class WeponsHolder : MonoBehaviour
 
     Animator anim;
 
-    bool isFireing = false;
+    public bool isFireing = false;
     bool isChangingWeapon = false;
     public bool isAiming = false;
 
@@ -49,11 +49,13 @@ public class WeponsHolder : MonoBehaviour
         {
             isFireing = true;
             playerMovement.senstivity /= 2;
+            playerMovement.aimSenstivity /= 2;
         }
         else if (value.canceled)
         {
             isFireing = false;
             playerMovement.senstivity *= 2;
+            playerMovement.aimSenstivity *= 2;
         }
     }
 
@@ -69,7 +71,7 @@ public class WeponsHolder : MonoBehaviour
     {
         if (value.started)
         {
-            ChangeWeapon(-1);
+            Switch(-1);
         }
     }
 
@@ -77,7 +79,7 @@ public class WeponsHolder : MonoBehaviour
     {
         if (value.started)
         {
-            ChangeWeapon(1);
+            Switch(1);
         }
     }
 
@@ -85,7 +87,7 @@ public class WeponsHolder : MonoBehaviour
     {
         if (value.started)
         {
-            ChangeWeapon(changeIndex == -1 ? 1 : -1);
+            Switch(changeIndex == -1 ? 1 : -1);
         }
     }
 
@@ -93,13 +95,13 @@ public class WeponsHolder : MonoBehaviour
     {
         if (value.started)
         {
-            ChangeWeapon((int)value.ReadValue<Vector2>().normalized.y);
+            Switch((int)value.ReadValue<Vector2>().normalized.y);
         }
     }
 
-    public void ChangeWeapon(int num)
+    public void Switch(int num)
     {
-        if (changeIndex == num || isChangingWeapon)
+        if (changeIndex == num || isChangingWeapon || secondGun == null)
             return;
 
         if(CurrentGun().isReloading)
@@ -132,14 +134,12 @@ public class WeponsHolder : MonoBehaviour
         aimGun = isAiming;
         if (isAiming)
         {
-            playerMovement.senstivity /= 3;
             recoilX /= 2;
             recoilY /= 2;
             recoilZ /= 2;
         }
         else
         {
-            playerMovement.senstivity *= 3;
             recoilX *= 2;
             recoilY *= 2;
             recoilZ *= 2;
@@ -153,7 +153,6 @@ public class WeponsHolder : MonoBehaviour
     {
         isAiming = false;
         aimGun = isAiming;
-        playerMovement.senstivity *= 3;
         recoilX *= 2;
         recoilY *= 2;
         recoilZ *= 2;
@@ -167,18 +166,19 @@ public class WeponsHolder : MonoBehaviour
     {
         anim = transform.parent.GetComponent<Animator>();
         firstGun = guns[0];
-        secondGun = guns[1];
     }
 
     // Update is called once per frame
     void Update()
     {
+        CurrentGun().cursor.gameObject.SetActive(!isAiming);
         Aiming();
         if (isChangingWeapon)
         {
             ChangeWeights();
             return;
         }
+
 
         if (isFireing && CurrentGun().canShoot)
         {
@@ -189,6 +189,44 @@ public class WeponsHolder : MonoBehaviour
                 headRecoil.FireRecoilRotation(isAiming? 0.5f : recoilX, isAiming ? 0.5f :
                     recoilY, isAiming ? 0.5f : recoilZ);
                 CurrentGun().Shot(bullet , isAiming);
+            }
+        }
+    }
+
+    public void ChangeWeapon(MapWeapon weapon)
+    {
+        if (weapon.weaponId == firstGun.weaponId)
+        {
+            firstGun.RestWeapon();
+        }
+        else if(secondGun != null && weapon.weaponId == secondGun.weaponId)
+        {
+            secondGun.RestWeapon();
+        }
+        else
+        {
+            MapWeaponsManager.instance.weapons[weapon.weaponId - 1].isWithPlayer = true;
+            if (secondGun == null)
+            {
+                secondGun = guns[weapon.weaponId];
+                Switch(1);
+            }
+            else
+            {
+                if (CurrentGun() == firstGun)
+                {
+                    MapWeaponsManager.instance.weapons[firstGun.weaponId].isWithPlayer = false;
+                    firstGun = guns[weapon.weaponId];
+                    firstGun.RestWeapon();
+                    //play animation to switch
+                }
+                else
+                {
+                    MapWeaponsManager.instance.weapons[secondGun.weaponId].isWithPlayer = false;
+                    secondGun = guns[weapon.weaponId];
+                    secondGun.RestWeapon();
+                    //play animation to switch
+                }
             }
         }
     }
@@ -291,6 +329,11 @@ public class WeponsHolder : MonoBehaviour
     public void StartReloadAnimation(string animName)
     {
         anim.SetTrigger("Reload " + animName);
+    }
+
+    public Gun GetWeaponById(int id)
+    {
+        return guns[id];
     }
 
     Gun PrevGun()

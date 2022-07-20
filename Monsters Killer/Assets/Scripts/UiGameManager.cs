@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 public class UiGameManager : MonoBehaviour
 {
 
+    public static UiGameManager instance;
+
     public void OnPause(InputAction.CallbackContext value)
     {
 
@@ -13,11 +15,17 @@ public class UiGameManager : MonoBehaviour
 
     void Start()
     {
-        
+        instance = this;
     }
 
     void Update()
     {
         
     }
+
+    public void ShowMapWeaponHintMessange(string msg)
+    {
+        Debug.Log(msg);
+    }
+
 }

@@ -6,12 +6,14 @@ using UnityEngine.Animations.Rigging;
 
 public class Gun : MonoBehaviour
 {
+    public int weaponId;
+
     [SerializeField] GameObject impactEffect;
     [SerializeField] TextMeshProUGUI weaponAmmoTextNormal , weaponAmmoTextAlert, weaponMagText;
     [SerializeField] Transform barel;
     [SerializeField] Transform cam;
     float cursorSize;
-    [SerializeField] RectTransform cursor;
+    public RectTransform cursor;
     [SerializeField] ParticleSystem muzzleFlash;
     public TwoBoneIKConstraint rightHandConstraint, leftHandConstraint;
     public float recoilRotationX, recoilRotationY, recoilRotationZ;
@@ -58,15 +60,17 @@ public class Gun : MonoBehaviour
     private void Start()
     {
         anim = GetComponent<Animator>();
-        cursorSize = 4400 * recoil;
+        cursorSize = 3600 * recoil;
         targetCursorSize = cursorSize;
         currentCursorSize = cursorSize;
         targetRecoilSize = recoil;
         currentRecoilSize = recoil;
         recoilAmount = recoil;
+
+        RestWeapon();
     }
 
-    public void SetUpWeapon()
+    public void RestWeapon()
     {
         mag = maxMag;
         ammo = maxAmmo;
@@ -78,7 +82,7 @@ public class Gun : MonoBehaviour
         
 
         canShoot = !isReloading;
-        cursorSize = recoilAmount * 4400;
+        cursorSize = recoilAmount * 3600;
 
         weaponAmmoTextNormal.gameObject.SetActive(!(ammo <= maxAmmo / 4));
         weaponAmmoTextAlert.gameObject.SetActive(ammo <= maxAmmo / 4);
@@ -128,7 +132,7 @@ public class Gun : MonoBehaviour
         ParticleSystem ie = Instantiate(impactEffect, hitPoint.point,
             Quaternion.LookRotation(hitPoint.normal)).GetComponent<ParticleSystem>();
         ie.Play();
-        StartCoroutine(DestroyAfterTime(ie.gameObject));
+        StartCoroutine(DestroyAfterTime(ie.gameObject , 4));
 
         b.hitPosition = hitPoint.point;
         b.transform.GetChild(0).GetComponent<ParticleSystem>().Play();
@@ -170,9 +174,14 @@ public class Gun : MonoBehaviour
         anim.Play("Idle");
     }
 
-    IEnumerator DestroyAfterTime(GameObject gb)
+    public bool IsFullAmmo()
     {
-        yield return new WaitForSeconds(1f);
+        return mag == maxMag && ammo == maxAmmo;
+    }
+
+    IEnumerator DestroyAfterTime(GameObject gb , float time)
+    {
+        yield return new WaitForSeconds(time);
         Destroy(gb);
     }
 }
